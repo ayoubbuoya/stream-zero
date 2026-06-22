@@ -61,14 +61,29 @@ The vault builds the Groth16 public-input vector in **exactly** the order the
 circuit declares them in [`noir_circuit/src/main.nr`](../noir_circuit/src/main.nr):
 
 ```
-[ commitment, current_time, withdraw_amount, nullifier_hash ]
+[ commitment, current_time, withdraw_amount, nullifier_hash, already_withdrawn, recipient ]
 ```
 
-`current_time` and `withdraw_amount` are encoded as 32-byte big-endian field
-elements (right-aligned); `commitment` and `nullifier_hash` are already field
-elements. If you change the circuit's input order or count, update both the
-circuit and the `public_inputs` vector in [`lib.rs`](contracts/streamzero/src/lib.rs)
-and the `VerifyingKey.ic` length.
+| Input | Source | Encoding |
+|-------|--------|----------|
+| `commitment` | stored at `create_stream` | field element (32B) |
+| `current_time` | caller, checked ≤ ledger time | u64 → 32B big-endian |
+| `withdraw_amount` | caller | u64 → 32B big-endian |
+| `nullifier_hash` | caller, checked unused | field element (32B) |
+| `already_withdrawn` | **derived on-chain** from `stream.withdrawn` | u64 → 32B big-endian |
+| `recipient` | **derived on-chain** as `sha256(recipient_strkey)` | 32B, reduced mod r |
+
+The last two are computed by the contract, not trusted from the caller — that is
+what makes them safe (see Security). If you change the circuit's input order or
+count, update the circuit, the `public_inputs` vector in
+[`lib.rs`](contracts/streamzero/src/lib.rs), **and** the `VerifyingKey.ic` length
+(must equal `n_public + 1` = 7).
+
+**Recipient binding — off-chain side:** when generating a proof, the prover must
+set the `recipient` input to `sha256(utf8(strkey)) mod r`, where `strkey` is the
+payout address (`G...`/`C...`). The contract computes the identical value from
+the `recipient: Address` argument, so the proof only verifies for that one
+address.
 
 ### Byte encoding (contract ⇄ prover)
 
@@ -133,23 +148,24 @@ The contract is the verifier; proofs are produced by the employee's browser/CLI.
 
 ## Security notes
 
-- **Replay protection** — each `nullifier_hash = H(secret, current_time)` may be
-  spent once. The vault stores spent nullifiers in persistent storage.
+- **Replay protection** — two independent mechanisms. (1) Each
+  `nullifier_hash = H(secret, current_time)` may be spent once; spent nullifiers
+  live in persistent storage. (2) `already_withdrawn` is bound to live state, so
+  a stale proof carries an outdated value and fails verification.
 - **Time binding** — the circuit *trusts* `current_time`; the vault rejects any
   `current_time` greater than the ledger timestamp so funds can't vest early.
-- **Deposit cap** — cumulative withdrawals can never exceed the deposit, an
-  on-chain backstop independent of the (private) vesting math.
-- **⚠️ Recipient is not bound in the reference circuit.** A pending `claim` in the
-  mempool could be front-run by resubmitting the same proof with a different
-  `recipient`. **Recommended fix:** add `recipient` as a public input to the
-  circuit and append it to the `public_inputs` vector in `claim`. Until then,
-  treat claims as front-runnable.
-- **⚠️ Cross-time over-withdrawal.** The reference circuit proves
-  `total_vested ≥ withdraw_amount` but does not subtract prior withdrawals, so in
-  principle multiple claims at different timestamps could each draw the full
-  vested amount. The deposit cap bounds the loss to the deposited total; for true
-  streaming semantics, track `withdrawn` inside the circuit (or bind it as a
-  public input).
+- **Cumulative vesting (in-circuit)** — the circuit proves
+  `total_vested ≥ already_withdrawn + withdraw_amount`, where `already_withdrawn`
+  is supplied by the contract from `stream.withdrawn`. Total claims over the
+  stream's life can never exceed what has actually vested — not just any single
+  claim. The deposit cap (`withdrawn + amount ≤ deposit`) remains as an
+  independent on-chain backstop.
+- **Recipient binding (anti-front-running)** — `recipient` is a circuit public
+  input set to `sha256(strkey)`. The contract recomputes it from the actual
+  payout address, so a pending proof in the mempool cannot be redirected to a
+  different recipient: changing the address changes the public inputs and the
+  pairing check fails.
 
-These are circuit-level concerns flagged for the team — the contract enforces
-every guarantee it can given the current public-input set.
+> Both gaps present in the original reference circuit (unbound recipient,
+> no cross-time tracking) are now fixed in [`main.nr`](../noir_circuit/src/main.nr)
+> and enforced on-chain in [`lib.rs`](contracts/streamzero/src/lib.rs).
