@@ -16,8 +16,9 @@ use soroban_sdk::{
 fn dummy_vk(env: &Env) -> VerifyingKey {
     let g1 = BytesN::from_array(env, &[0u8; 64]);
     let g2 = BytesN::from_array(env, &[0u8; 128]);
+    // IC length == number of circuit public inputs (6) + 1.
     let mut ic: SVec<BytesN<64>> = SVec::new(env);
-    for _ in 0..5 {
+    for _ in 0..7 {
         ic.push_back(g1.clone());
     }
     VerifyingKey {

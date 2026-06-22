@@ -190,14 +190,18 @@ impl StreamZero {
 
     /// Employee claims `withdraw_amount` by submitting a ZK proof.
     ///
-    /// `commitment`, `current_time`, `withdraw_amount`, `nullifier` are the
-    /// circuit's four public inputs, in that exact order. `recipient` receives
-    /// the funds.
+    /// The circuit's six public inputs are reconstructed here, in this exact
+    /// order:
+    ///   `[commitment, current_time, withdraw_amount, nullifier_hash,
+    ///     already_withdrawn, recipient]`
     ///
-    /// ⚠️ The reference circuit does **not** bind `recipient` into the proof, so
-    /// a pending claim could in principle be front-run with a different
-    /// recipient. The fix is to add the recipient as a public input to the
-    /// circuit and include it in `public_inputs` below — see README "Security".
+    /// Two of them are derived on-chain rather than trusted from the caller,
+    /// which is what makes them safe:
+    /// * `already_withdrawn` = the stream's current `withdrawn` total, binding
+    ///   the proof to the live state (a replayed/stale proof carries an old
+    ///   value and fails verification), and enforcing cumulative vesting.
+    /// * `recipient` = `sha256(recipient_strkey)`, binding the proof to exactly
+    ///   one payout address so a pending claim can't be front-run to another.
     #[allow(clippy::too_many_arguments)]
     pub fn claim(
         env: Env,
@@ -236,11 +240,24 @@ impl StreamZero {
             .instance()
             .get(&DataKey::Vk)
             .ok_or(Error::NotInitialized)?;
+        // `already_withdrawn` is taken from on-chain state, never from the
+        // caller — this both enforces cumulative vesting and binds the proof to
+        // the current stream state (replay protection).
+        let already_withdrawn = stream.withdrawn as u64;
+        // `recipient` is bound as sha256(strkey); the prover computes the same
+        // value off-chain, so the proof only verifies for this exact address.
+        let recipient_field = env
+            .crypto()
+            .sha256(&recipient.to_string().to_bytes())
+            .to_bytes();
+
         let mut public_inputs: Vec<BytesN<32>> = Vec::new(&env);
         public_inputs.push_back(commitment.clone());
         public_inputs.push_back(u64_to_fr_be(&env, current_time));
         public_inputs.push_back(u64_to_fr_be(&env, withdraw_amount));
         public_inputs.push_back(nullifier.clone());
+        public_inputs.push_back(u64_to_fr_be(&env, already_withdrawn));
+        public_inputs.push_back(recipient_field);
 
         if !groth16::verify(&env, &vk, &proof, &public_inputs) {
             return Err(Error::InvalidProof);
