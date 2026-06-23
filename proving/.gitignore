@@ -1,0 +1,5 @@
+streamzero-prover/target/
+node_modules/
+build/
+circom
+package-lock.json
