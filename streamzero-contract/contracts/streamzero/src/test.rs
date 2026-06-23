@@ -199,6 +199,144 @@ fn test_u64_to_fr_be_encoding() {
     );
 }
 
+// --- end-to-end: real Groth16/BN254 proof through the host functions --------
+
+use crate::e2e_fixtures as fx;
+use soroban_sdk::String as SString;
+
+fn real_vk(env: &Env) -> VerifyingKey {
+    let mut ic: SVec<BytesN<64>> = SVec::new(env);
+    for entry in fx::VK_IC.iter() {
+        ic.push_back(BytesN::from_array(env, entry));
+    }
+    VerifyingKey {
+        alpha: BytesN::from_array(env, &fx::VK_ALPHA),
+        beta: BytesN::from_array(env, &fx::VK_BETA),
+        gamma: BytesN::from_array(env, &fx::VK_GAMMA),
+        delta: BytesN::from_array(env, &fx::VK_DELTA),
+        ic,
+    }
+}
+
+fn real_proof(env: &Env) -> Proof {
+    Proof {
+        a: BytesN::from_array(env, &fx::PROOF_A),
+        b: BytesN::from_array(env, &fx::PROOF_B),
+        c: BytesN::from_array(env, &fx::PROOF_C),
+    }
+}
+
+struct E2e {
+    env: Env,
+    client: StreamZeroClient<'static>,
+    token: mock_stablecoin::MockStablecoinClient<'static>,
+    recipient: Address,
+}
+
+/// Stands up a vault wired with the REAL verifying key + a funded stream whose
+/// commitment matches the fixture proof. Uses the mock stablecoin (balance-map,
+/// no trustline) so payout to the fixture's classic G-address works in-test.
+fn setup_e2e() -> E2e {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let employer = Address::generate(&env);
+
+    let token_id = env.register(mock_stablecoin::MockStablecoin, (admin.clone(),));
+    let token = mock_stablecoin::MockStablecoinClient::new(&env, &token_id);
+
+    let contract_id = env.register(StreamZero, (admin, token_id.clone(), real_vk(&env)));
+    let client = StreamZeroClient::new(&env, &contract_id);
+
+    // Fund the stream with the fixture commitment.
+    token.mint(&employer, &10_000);
+    let commitment = BytesN::from_array(&env, &fx::COMMITMENT);
+    client.create_stream(&employer, &commitment, &1_000);
+
+    // Bind ledger time so `current_time` is valid (<= now).
+    env.ledger().set_timestamp(fx::CURRENT_TIME);
+
+    let recipient = Address::from_string(&SString::from_str(&env, fx::RECIPIENT_STRKEY));
+    E2e {
+        env,
+        client,
+        token,
+        recipient,
+    }
+}
+
+#[test]
+fn test_e2e_real_proof_claim_succeeds() {
+    let e = setup_e2e();
+    let commitment = BytesN::from_array(&e.env, &fx::COMMITMENT);
+    let nullifier = BytesN::from_array(&e.env, &fx::NULLIFIER);
+
+    // The real Groth16 proof is verified by the BN254 host functions in-process.
+    e.client.claim(
+        &e.recipient,
+        &commitment,
+        &fx::CURRENT_TIME,
+        &fx::WITHDRAW_AMOUNT,
+        &nullifier,
+        &real_proof(&e.env),
+    );
+
+    assert_eq!(e.token.balance(&e.recipient), fx::WITHDRAW_AMOUNT as i128);
+    let stream = e.client.get_stream(&commitment).unwrap();
+    assert_eq!(stream.withdrawn, fx::WITHDRAW_AMOUNT as i128);
+    assert!(e.client.is_nullifier_used(&nullifier));
+}
+
+#[test]
+fn test_e2e_wrong_public_input_rejected() {
+    // Same valid proof, but claim a different amount than was proven: the public
+    // inputs no longer match, so the pairing check fails -> InvalidProof.
+    let e = setup_e2e();
+    let commitment = BytesN::from_array(&e.env, &fx::COMMITMENT);
+    let nullifier = BytesN::from_array(&e.env, &fx::NULLIFIER);
+
+    let err = e
+        .client
+        .try_claim(
+            &e.recipient,
+            &commitment,
+            &fx::CURRENT_TIME,
+            &(fx::WITHDRAW_AMOUNT + 1),
+            &nullifier,
+            &real_proof(&e.env),
+        )
+        .err()
+        .unwrap()
+        .unwrap();
+    assert_eq!(err, Error::InvalidProof);
+}
+
+#[test]
+fn test_e2e_wrong_recipient_rejected() {
+    // Front-running attempt: a different recipient changes the bound `recipient`
+    // public input, so the proof fails to verify.
+    let e = setup_e2e();
+    let commitment = BytesN::from_array(&e.env, &fx::COMMITMENT);
+    let nullifier = BytesN::from_array(&e.env, &fx::NULLIFIER);
+    let attacker = Address::generate(&e.env);
+
+    let err = e
+        .client
+        .try_claim(
+            &attacker,
+            &commitment,
+            &fx::CURRENT_TIME,
+            &fx::WITHDRAW_AMOUNT,
+            &nullifier,
+            &real_proof(&e.env),
+        )
+        .err()
+        .unwrap()
+        .unwrap();
+    assert_eq!(err, Error::InvalidProof);
+}
+
 #[test]
 fn test_set_vk_requires_admin_auth_path() {
     // With mock_all_auths the admin-gated rotation simply succeeds; this checks

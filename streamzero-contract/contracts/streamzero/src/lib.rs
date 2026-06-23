@@ -18,6 +18,9 @@
 
 mod groth16;
 #[cfg(test)]
+#[allow(dead_code)]
+mod e2e_fixtures;
+#[cfg(test)]
 mod test;
 
 pub use groth16::{Proof, VerifyingKey};

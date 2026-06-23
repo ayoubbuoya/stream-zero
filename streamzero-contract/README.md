@@ -125,26 +125,28 @@ VAULT=$(stellar contract deploy \
   -- --admin deployer --token $TOKEN --vk "$(cat verifying_key.soroban.json)")
 ```
 
-## Proving pipeline (off-chain)
+## Proving pipeline (off-chain) — verified end-to-end ✅
 
-The contract is the verifier; proofs are produced by the employee's browser/CLI.
+The contract is the verifier; proofs are produced off-chain. Because the BN254
+host functions implement **Groth16** (not UltraHonk), proofs are generated with a
+Groth16 prover. This repo ships a pure-Rust [arkworks](https://arkworks.rs) prover
+in [`../proving`](../proving) that produces a **real proof verified through the
+actual host functions** in the contract's test suite:
 
-1. **Compile the circuit** and run the trusted setup:
-   ```bash
-   cd noir_circuit
-   nargo compile
-   # Groth16 backend (e.g. via bb / snarkjs) → proving key + verifying key
-   ```
-2. **Generate a witness** from the employee's secret + the current ledger time,
-   then **prove** to get `(A, B, C)`.
-3. **Encode** the proof and verifying key into the Soroban byte layout above
-   (the `encode_bn254_for_soroban` step). The VK becomes the `--vk` JSON; the
-   proof becomes the `proof` argument to `claim`.
-4. **Submit** `claim(...)`.
+```bash
+cd ../proving/streamzero-prover && cargo run --release   # emits e2e_fixtures.rs
+cd ../../streamzero-contract && cargo test -p streamzero  # test_e2e_real_proof_claim_succeeds
+```
 
-> `bb` (Barretenberg) is not bundled in this repo; install it with `noirup` /
-> `bbup` to run the full pipeline. `nargo test` already exercises the circuit
-> logic itself.
+The e2e tests prove the full path works: a valid proof disburses funds, while a
+wrong amount or a swapped recipient is rejected with `InvalidProof`.
+
+> **bb / Noir note:** `bb` (Barretenberg) produces *UltraHonk* proofs, which a
+> Groth16 verifier cannot check — so the proving side uses Groth16 tooling
+> (arkworks here; snarkjs/circom for the browser). The Noir circuit remains the
+> canonical spec of the statement and is unit-tested with `nargo test`. See
+> [`../proving/README.md`](../proving/README.md) for the full rationale and the
+> exact host byte layout.
 
 ## Security notes
 

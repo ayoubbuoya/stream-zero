@@ -1599,6 +1599,7 @@ dependencies = [
 name = "streamzero"
 version = "0.1.0"
 dependencies = [
+ "mock-stablecoin",
  "soroban-sdk",
 ]
 
