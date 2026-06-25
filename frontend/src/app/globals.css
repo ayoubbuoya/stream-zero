@@ -1,7 +1,16 @@
+@import "tailwindcss";
+
 /* ============================================================
    StreamZero — "Stellar Violet" design system
    Vibrant fintech: indigo/violet base, magenta→cyan aurora,
    glassy surfaces, restrained motion.
+
+   Design tokens live in :root below and are surfaced to Tailwind
+   via the `@theme inline` block — so every brand value is usable
+   both as a CSS variable (var(--violet)) and a utility (bg-violet,
+   text-muted, rounded-lg, shadow-glow). Spacing and font-size
+   scales come from Tailwind's defaults (4px base; text-xs…text-9xl),
+   which is what replaces the old hand-typed 13.5px / 11px numbers.
    ============================================================ */
 
 :root {
@@ -45,6 +54,48 @@
   /* Shadow / glow */
   --shadow: 0 24px 60px -28px rgba(10, 4, 30, 0.9);
   --glow-violet: 0 0 0 1px rgba(160, 107, 255, 0.5), 0 14px 40px -12px rgba(138, 77, 255, 0.55);
+}
+
+/* ------------------------------------------------------------
+   Expose the tokens above to Tailwind.
+   `inline` reuses the existing :root vars instead of duplicating
+   their values, so there is one source of truth. Adds utilities:
+     colors  → bg-violet, text-muted, border-strong, …
+     fonts   → font-display, font-sans, font-mono
+     radii   → rounded-sm / rounded / rounded-lg / rounded-xl
+     shadows → shadow-panel, shadow-glow
+   ------------------------------------------------------------ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-panel: var(--panel-solid);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+
+  --color-violet: var(--violet);
+  --color-violet-600: var(--violet-600);
+  --color-magenta: var(--magenta);
+  --color-cyan: var(--cyan);
+
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+
+  --font-display: var(--font-display), var(--font-sans), sans-serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  --radius-sm: var(--r-sm);
+  --radius: var(--r);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+
+  --shadow-panel: var(--shadow);
+  --shadow-glow: var(--glow-violet);
 }
 
 * {
