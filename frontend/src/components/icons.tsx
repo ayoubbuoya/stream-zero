@@ -101,3 +101,43 @@ export const KeyIcon = (p: P) => (
     <path d="M11 11l8 8M16 16l2-2M14 18l2-2" />
   </svg>
 );
+
+export const ArrowRightIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
+export const ClockIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5V12l3 2" />
+  </svg>
+);
+
+export const CodeIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13 6l-2 12" />
+  </svg>
+);
+
+export const CpuIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="7" y="7" width="10" height="10" rx="1.5" />
+    <path d="M9.5 2.5v2M14.5 2.5v2M9.5 19.5v2M14.5 19.5v2M2.5 9.5h2M2.5 14.5h2M19.5 9.5h2M19.5 14.5h2" />
+  </svg>
+);
+
+export const LayersIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 3l9 5-9 5-9-5 9-5z" />
+    <path d="M3 13l9 5 9-5" opacity="0.6" />
+  </svg>
+);
+
+export const NetworkIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3c2.5 2.5 2.5 15.5 0 18M12 3c-2.5 2.5-2.5 15.5 0 18" />
+  </svg>
+);

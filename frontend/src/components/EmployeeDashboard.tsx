@@ -6,6 +6,7 @@ import { computeCommitment, generateProof } from "@/lib/prover";
 import { decodeLink, StreamSecret, vestedBase } from "@/lib/stream";
 import { fromBaseUnits, toBaseUnits } from "@/lib/config";
 import { nowSecs, safeCurrentTime } from "@/lib/stellar";
+import { useWallet } from "@/components/WalletProvider";
 import {
   UserIcon,
   KeyIcon,
@@ -23,13 +24,8 @@ interface Loaded {
   withdrawnBase: bigint;
 }
 
-export default function EmployeeDashboard({
-  address,
-  onConnect,
-}: {
-  address: string | null;
-  onConnect: () => void;
-}) {
+export default function EmployeeDashboard() {
+  const { address, connect: onConnect } = useWallet();
   const [linkText, setLinkText] = useState("");
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [tick, setTick] = useState(0);
@@ -48,7 +44,7 @@ export default function EmployeeDashboard({
   // Auto-load from ?s= on first render.
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get("s");
-    if (s) setLinkText(`${window.location.origin}/?s=${s}`);
+    if (s) setLinkText(`${window.location.origin}/employee?s=${s}`);
   }, []);
 
   const load = useCallback(async (raw: string) => {

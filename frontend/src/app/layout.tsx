@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { WalletProvider } from "@/components/WalletProvider";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -31,7 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
@@ -43,7 +46,13 @@ export default function RootLayout({
           <span className="aurora-blob c" />
           <div className="grid-veil" />
         </div>
-        {children}
+        <WalletProvider>
+          <div className="wrap">
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+          </div>
+        </WalletProvider>
       </body>
     </html>
   );

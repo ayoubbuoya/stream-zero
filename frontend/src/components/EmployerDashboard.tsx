@@ -6,6 +6,7 @@ import { computeCommitment, randomSecretHex } from "@/lib/prover";
 import { encodeLink } from "@/lib/stream";
 import { fromBaseUnits, toBaseUnits } from "@/lib/config";
 import { nowSecs } from "@/lib/stellar";
+import { useWallet } from "@/components/WalletProvider";
 import {
   BuildingIcon,
   LockIcon,
@@ -16,13 +17,8 @@ import {
   WalletIcon,
 } from "@/components/icons";
 
-export default function EmployerDashboard({
-  address,
-  onConnect,
-}: {
-  address: string | null;
-  onConnect: () => void;
-}) {
+export default function EmployerDashboard() {
+  const { address, connect: onConnect } = useWallet();
   const [label, setLabel] = useState("Engineering — Alice");
   const [allocation, setAllocation] = useState(5000);
   const [days, setDays] = useState(30);
@@ -102,7 +98,7 @@ export default function EmployerDashboard({
         startTime: startTime.toString(),
         label,
       });
-      const url = `${window.location.origin}/?s=${token0}`;
+      const url = `${window.location.origin}/employee?s=${token0}`;
       setLink(url);
       await refreshBalance();
     } catch (e) {
