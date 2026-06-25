@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/components/WalletProvider";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
-
+// Inter is the single brand typeface (headings + body); the design
+// system surfaces it through both --font-display and --font-sans.
 const sans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -37,7 +32,7 @@ export default function RootLayout({
   readonly children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>
         {/* Ambient aurora field — purely decorative, sits behind everything. */}
         <div className="aurora" aria-hidden="true">

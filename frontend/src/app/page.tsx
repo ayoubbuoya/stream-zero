@@ -109,7 +109,7 @@ export default function Home() {
             <div className="surface group relative rounded-lg p-[22px] [transform:rotate(-1.1deg)] transition-transform duration-300 hover:[transform:rotate(0deg)_translateY(-2px)]">
               <div className="mb-[18px] flex items-center justify-between">
                 <div className="flex items-center gap-[11px]">
-                  <span className="bg-grad-violet grid h-[38px] w-[38px] place-items-center rounded-[11px] font-display text-sm font-bold text-white shadow-glow">
+                  <span className="bg-grad-violet grid h-[38px] w-[38px] place-items-center rounded-[11px] font-display text-sm font-bold text-bg shadow-glow">
                     AK
                   </span>
                   <div>
@@ -295,7 +295,7 @@ export default function Home() {
               </ul>
             </div>
             <div className="rounded-[14px] border border-border bg-[rgba(8,5,18,0.35)] p-[18px]">
-              <span className="mb-3.5 inline-flex rounded-full border border-cyan/30 bg-cyan/[0.08] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-cyan">
+              <span className="mb-3.5 inline-flex rounded-full border border-ok/30 bg-ok/[0.08] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-ok">
                 Public
               </span>
               <ul className="m-0 list-none p-0">
@@ -303,7 +303,7 @@ export default function Home() {
                   (t) => (
                     <li
                       key={t}
-                      className="relative py-[7px] pl-[18px] text-[13.5px] leading-[1.5] text-muted before:absolute before:left-0 before:top-[14px] before:h-1.5 before:w-1.5 before:rounded-full before:bg-cyan before:content-['']"
+                      className="relative py-[7px] pl-[18px] text-[13.5px] leading-[1.5] text-muted before:absolute before:left-0 before:top-[14px] before:h-1.5 before:w-1.5 before:rounded-full before:bg-ok before:content-['']"
                     >
                       {t}
                     </li>

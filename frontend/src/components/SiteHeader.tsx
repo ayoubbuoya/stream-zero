@@ -19,7 +19,7 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 mb-2 flex items-center justify-between gap-4 py-4 backdrop-blur-[14px]">
       <Link href="/" className="flex items-center gap-3 no-underline">
-        <span className="bg-grad-violet grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[11px] text-white shadow-glow">
+        <span className="bg-grad-violet grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[11px] text-bg shadow-glow">
           <StreamIcon size={22} />
         </span>
         <div className="flex flex-col leading-none">
@@ -42,7 +42,7 @@ export default function SiteHeader() {
               href={item.href}
               className={`rounded-full px-3.5 py-[7px] text-[13px] font-semibold transition-colors ${
                 active
-                  ? "bg-grad-violet text-white shadow-[0_8px_22px_-12px_rgba(138,77,255,0.8)]"
+                  ? "bg-grad-violet text-bg shadow-[0_8px_22px_-12px_rgba(182,255,92,0.7)]"
                   : "text-muted hover:text-text"
               }`}
             >

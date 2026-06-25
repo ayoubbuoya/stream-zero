@@ -10,7 +10,7 @@ export default function RoleTabs() {
 
   const tab = (active: boolean) =>
     `flex items-center justify-center gap-[9px] rounded-[10px] px-[14px] py-3 text-sm font-semibold transition-colors ${
-      active ? "bg-grad-violet text-white shadow-[0_10px_30px_-12px_rgba(138,77,255,0.7)]" : "text-muted hover:text-text"
+      active ? "bg-grad-violet text-bg shadow-[0_10px_30px_-12px_rgba(182,255,92,0.6)]" : "text-muted hover:text-text"
     }`;
 
   return (

@@ -1,62 +1,74 @@
 @import "tailwindcss";
 
 /* ============================================================
-   StreamZero — "Stellar Violet" design system
-   Vibrant fintech: indigo/violet base, magenta→cyan aurora,
-   glassy surfaces, restrained motion.
+   StreamZero — "Neon Vault" design system
+   Dark, premium, futuristic: deep-navy base, neon-green primary
+   accent, soft-purple secondary, glassy white/5 surfaces, light
+   inputs for contrast, restrained glow + motion.
 
    Structure:
      :root            raw design tokens (one source of truth)
      @theme inline    surfaces tokens to Tailwind utilities
-     @layer base      element defaults (body, inputs, links)
-     @layer components  a few reusable primitives (.btn, .surface…)
+     @layer base      element defaults (body, inputs, links, scrollbar)
+     @layer components  reusable primitives (.btn, .surface…)
      keyframes + aurora  effects that don't belong in markup
    Everything else is composed from Tailwind utilities in the JSX.
+
+   Legacy aliases (--violet, --cyan, --magenta) are kept so the
+   existing utility classes keep resolving — they now point at the
+   new green/purple palette, so a remap here re-skins the whole app.
    ============================================================ */
 
 :root {
   /* Surfaces */
-  --bg: #0a0714;
-  --bg-2: #0d0a1c;
-  --panel: rgba(26, 19, 48, 0.55);
-  --panel-solid: #161029;
-  --panel-2: rgba(38, 28, 70, 0.55);
-  --border: rgba(160, 130, 255, 0.16);
-  --border-strong: rgba(160, 130, 255, 0.34);
+  --bg: #0f172a;
+  --bg-2: #0b1120;
+  --panel: rgba(255, 255, 255, 0.05);
+  --panel-solid: #111827;
+  --panel-2: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
 
   /* Ink */
-  --text: #ece8f7;
-  --muted: #9b91bf;
-  --faint: #6f6593;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --faint: #64748b;
 
   /* Brand */
-  --violet: #a06bff;
-  --violet-600: #8a4dff;
-  --magenta: #ff5caa;
-  --cyan: #38e0ff;
-  --accent: var(--violet);
+  --green: #b6ff5c;
+  --green-600: #a5ed4b;
+  --purple: #a183ff;
+  --accent: var(--green);
+
+  /* Legacy aliases → new palette (keeps existing utilities valid) */
+  --violet: var(--green);
+  --violet-600: var(--green-600);
+  --magenta: var(--purple);
+  --cyan: var(--purple);
 
   /* Status */
-  --ok: #45e6a4;
-  --danger: #ff6b88;
-  --warn: #ffce6b;
+  --ok: #b6ff5c;
+  --danger: #ef4444;
+  --danger-text: #fca5a5;
+  --warn: #fbbf24;
 
   /* Gradients */
-  --grad-brand: linear-gradient(120deg, #ff5caa 0%, #a06bff 48%, #38e0ff 100%);
-  --grad-violet: linear-gradient(135deg, #a06bff, #8a4dff);
-  --grad-panel: linear-gradient(165deg, rgba(46, 33, 84, 0.55), rgba(18, 13, 36, 0.35));
+  --grad-brand: linear-gradient(120deg, #b6ff5c 0%, #a183ff 100%);
+  --grad-violet: linear-gradient(135deg, #b6ff5c, #a5ed4b);
+  --grad-panel: linear-gradient(165deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
 
   /* Shadow / glow */
-  --shadow: 0 24px 60px -28px rgba(10, 4, 30, 0.9);
-  --glow-violet: 0 0 0 1px rgba(160, 107, 255, 0.5), 0 14px 40px -12px rgba(138, 77, 255, 0.55);
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
+  --glow-green: 0 0 0 1px rgba(182, 255, 92, 0.35), 0 12px 34px -10px rgba(182, 255, 92, 0.45);
+  --glow-violet: var(--glow-green); /* legacy alias */
 }
 
 /* ------------------------------------------------------------
    Tokens → Tailwind utilities. `inline` reuses the :root vars,
    so there is exactly one source of truth. This unlocks:
-     colors  → bg-violet, text-muted, border-border-strong, …
+     colors  → bg-violet (green), text-cyan (purple), text-ok, …
      panels  → bg-panel, bg-bg, bg-bg-2
-     fonts   → font-display / font-sans / font-mono
+     fonts   → font-display / font-sans / font-mono  (all Inter)
      radii   → rounded-sm / rounded / rounded-lg / rounded-xl
      shadows → shadow-panel / shadow-glow
      motion  → animate-rise / animate-shimmer / animate-ping-slow
@@ -77,22 +89,24 @@
   --color-violet-600: var(--violet-600);
   --color-magenta: var(--magenta);
   --color-cyan: var(--cyan);
+  --color-green: var(--green);
+  --color-purple: var(--purple);
 
   --color-ok: var(--ok);
-  --color-danger: var(--danger);
+  --color-danger: var(--danger-text);
   --color-warn: var(--warn);
 
-  --font-display: var(--font-display), var(--font-sans), sans-serif;
+  --font-display: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
 
-  --radius-sm: var(--r-sm, 10px);
-  --radius: var(--r, 14px);
-  --radius-lg: var(--r-lg, 20px);
-  --radius-xl: var(--r-xl, 26px);
+  --radius-sm: 16px;
+  --radius: 20px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
 
   --shadow-panel: var(--shadow);
-  --shadow-glow: var(--glow-violet);
+  --shadow-glow: var(--glow-green);
 
   --animate-rise: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-shimmer: shimmer 3s linear infinite;
@@ -104,6 +118,9 @@
 /* ---------- Base ---------- */
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   html,
   body {
     margin: 0;
@@ -119,49 +136,71 @@
     overflow-x: hidden;
   }
   a {
-    color: var(--violet);
+    color: var(--green);
     text-decoration: none;
   }
   ::selection {
-    background: rgba(160, 107, 255, 0.45);
-    color: #fff;
+    background: rgba(182, 255, 92, 0.35);
+    color: #0f172a;
   }
 
-  /* Form controls share one look across the app */
+  /* Light inputs inside dark cards — high contrast, neon-green focus */
   input,
   textarea {
     width: 100%;
-    background: rgba(8, 5, 18, 0.6);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    padding: 12px 13px;
-    font-size: 14px;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    color: #0f172a;
+    padding: 14px 16px;
+    font-size: 16px;
     font-family: inherit;
-    transition: border-color 0.18s, box-shadow 0.18s;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
   input:focus,
   textarea:focus {
     outline: none;
-    border-color: var(--violet);
-    box-shadow: 0 0 0 3px rgba(160, 107, 255, 0.16);
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(182, 255, 92, 0.25);
   }
   input::placeholder,
   textarea::placeholder {
-    color: var(--faint);
+    color: #94a3b8;
   }
   textarea {
     resize: vertical;
-    min-height: 78px;
+    min-height: 84px;
     font-family: var(--font-mono), monospace;
-    font-size: 12.5px;
+    font-size: 13px;
+  }
+
+  /* Custom scrollbar — narrow, dark track, slate thumb */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #334155 transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
   }
 }
 
 /* ---------- Reusable primitives ---------- */
 
 @layer components {
-  /* Glassy surface with the signature gradient hairline */
+  /* Glassy surface with a subtle neon hairline */
   .surface {
     position: relative;
     background: var(--grad-panel);
@@ -176,15 +215,15 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(160deg, rgba(160, 107, 255, 0.5), transparent 40%);
+    background: linear-gradient(160deg, rgba(182, 255, 92, 0.32), transparent 42%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-    opacity: 0.7;
+    opacity: 0.6;
   }
 
-  /* Primary / secondary buttons */
+  /* Primary button — neon green, dark ink, bold uppercase, soft glow */
   .btn {
     position: relative;
     display: inline-flex;
@@ -192,43 +231,52 @@
     justify-content: center;
     gap: 9px;
     border: none;
-    border-radius: var(--radius-sm);
-    padding: 13px 18px;
+    border-radius: 16px;
+    padding: 14px 22px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     font-family: inherit;
     cursor: pointer;
-    color: #fff;
+    color: #0f172a;
     text-decoration: none;
-    background: var(--grad-violet);
-    box-shadow: 0 12px 30px -12px rgba(138, 77, 255, 0.7);
-    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    background: var(--green);
+    box-shadow: 0 4px 16px rgba(182, 255, 92, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
     overflow: hidden;
   }
   .btn:hover:not(:disabled) {
+    background: var(--green-600);
     transform: translateY(-1px);
-    filter: brightness(1.07);
-    box-shadow: 0 18px 38px -12px rgba(138, 77, 255, 0.8);
+    box-shadow: 0 6px 22px rgba(182, 255, 92, 0.4);
   }
   .btn:active:not(:disabled) {
     transform: translateY(0);
   }
   .btn:disabled {
-    opacity: 0.55;
+    opacity: 0.5;
     cursor: not-allowed;
   }
+  /* Dark spinner reads on the neon-green primary surface */
+  .btn:not(.btn-secondary) .spinner {
+    border-color: rgba(15, 23, 42, 0.25);
+    border-top-color: #0f172a;
+  }
+
+  /* Secondary button — dark transparent glass */
   .btn-secondary {
-    background: var(--panel-2);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text);
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--border);
     box-shadow: none;
   }
   .btn-secondary:hover:not(:disabled) {
-    border-color: var(--violet);
-    filter: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-strong);
   }
 
-  /* Brand gradient text */
+  /* Brand gradient text — neon green → soft purple */
   .text-grad {
     background: var(--grad-brand);
     -webkit-background-clip: text;
@@ -258,7 +306,7 @@
     height: 7px;
     border-radius: 50%;
     background: var(--ok);
-    box-shadow: 0 0 0 0 rgba(69, 230, 164, 0.6);
+    box-shadow: 0 0 0 0 rgba(182, 255, 92, 0.6);
     animation: var(--animate-ping-slow);
   }
 
@@ -286,9 +334,9 @@
   50% { opacity: 0.4; }
 }
 @keyframes ping-slow {
-  0% { box-shadow: 0 0 0 0 rgba(69, 230, 164, 0.55); }
-  70% { box-shadow: 0 0 0 7px rgba(69, 230, 164, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(69, 230, 164, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(182, 255, 92, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(182, 255, 92, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(182, 255, 92, 0); }
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -305,15 +353,15 @@
   z-index: -1;
   overflow: hidden;
   background:
-    radial-gradient(900px 520px at 78% -8%, rgba(56, 224, 255, 0.1), transparent 60%),
-    radial-gradient(1100px 700px at 12% 4%, rgba(255, 92, 170, 0.12), transparent 58%),
+    radial-gradient(900px 520px at 80% -10%, rgba(161, 131, 255, 0.14), transparent 60%),
+    radial-gradient(1100px 700px at 10% 2%, rgba(182, 255, 92, 0.1), transparent 58%),
     var(--bg);
 }
 .aurora-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.55;
+  opacity: 0.5;
   will-change: transform;
 }
 .aurora-blob.a {
@@ -321,7 +369,7 @@
   height: 540px;
   top: -160px;
   left: -120px;
-  background: radial-gradient(circle, rgba(255, 92, 170, 0.55), transparent 65%);
+  background: radial-gradient(circle, rgba(182, 255, 92, 0.34), transparent 65%);
   animation: drift 26s ease-in-out infinite;
 }
 .aurora-blob.b {
@@ -329,7 +377,7 @@
   height: 600px;
   top: -200px;
   right: -180px;
-  background: radial-gradient(circle, rgba(56, 224, 255, 0.45), transparent 65%);
+  background: radial-gradient(circle, rgba(161, 131, 255, 0.42), transparent 65%);
   animation: drift 32s ease-in-out infinite reverse;
 }
 .aurora-blob.c {
@@ -337,15 +385,15 @@
   height: 520px;
   bottom: -260px;
   left: 30%;
-  background: radial-gradient(circle, rgba(160, 107, 255, 0.5), transparent 65%);
+  background: radial-gradient(circle, rgba(161, 131, 255, 0.38), transparent 65%);
   animation: drift 38s ease-in-out infinite;
 }
 .grid-veil {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(160, 130, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(160, 130, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
   background-size: 46px 46px;
   mask-image: radial-gradient(circle at 50% 0%, #000 0%, transparent 70%);
 }
