@@ -119,7 +119,8 @@ export default function EmployerDashboard() {
     n.toLocaleString(undefined, { maximumFractionDigits: n < 1 ? 6 : 2 });
 
   return (
-    <>
+    <div className="dash">
+      <div className="dash-main">
       <div className="card">
         <div className="card-head">
           <span className="card-icon">
@@ -206,8 +207,32 @@ export default function EmployerDashboard() {
           </div>
         )}
       </div>
+      </div>
 
-      {link && (
+      <div className="dash-aside">
+      {!link ? (
+        <div className="aside-empty">
+          <span className="orb">
+            <LockIcon size={24} />
+          </span>
+          <h3>Your secret link lands here</h3>
+          <p>
+            Once you lock funds, we mint a one-time link that carries the employee&apos;s secret —
+            the only thing they need to start claiming.
+          </p>
+          <ul className="mini-steps">
+            <li>
+              <span>1</span> Set the allocation &amp; duration
+            </li>
+            <li>
+              <span>2</span> Lock USDC under a Poseidon commitment
+            </li>
+            <li>
+              <span>3</span> Share the link over a private channel
+            </li>
+          </ul>
+        </div>
+      ) : (
         <div className="card">
           <div className="card-head">
             <span className="card-icon" style={{ color: "var(--ok)" }}>
@@ -243,7 +268,8 @@ export default function EmployerDashboard() {
           </div>
         </div>
       )}
-    </>
+      </div>
+    </div>
   );
 }
 

@@ -200,7 +200,8 @@ export default function EmployeeDashboard() {
   const claimableNow = claimableBase < 0n ? 0n : claimableBase;
 
   return (
-    <>
+    <div className="dash">
+      <div className="dash-main">
       <div className="card">
         <div className="card-head">
           <span className="card-icon">
@@ -230,8 +231,32 @@ export default function EmployeeDashboard() {
           </div>
         )}
       </div>
+      </div>
 
-      {loaded && (
+      <div className="dash-aside">
+      {!loaded ? (
+        <div className="aside-empty">
+          <span className="orb">
+            <BoltIcon size={24} />
+          </span>
+          <h3>Your stream appears here</h3>
+          <p>
+            Load a secret link and you&apos;ll watch your balance vest live — then withdraw with a
+            proof built right here in your browser.
+          </p>
+          <ul className="mini-steps">
+            <li>
+              <span>1</span> Paste the link your employer sent you
+            </li>
+            <li>
+              <span>2</span> Watch it vest, second by second
+            </li>
+            <li>
+              <span>3</span> Prove &amp; withdraw — nothing else leaks
+            </li>
+          </ul>
+        </div>
+      ) : (
         <div className="card">
           <div className="card-head">
             <span className="card-icon">
@@ -364,7 +389,8 @@ export default function EmployeeDashboard() {
           </div>
         </div>
       )}
-    </>
+      </div>
+    </div>
   );
 }
 

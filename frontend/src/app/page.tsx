@@ -51,36 +51,93 @@ export default function Home() {
 
       {/* ---------- Hero ---------- */}
       <section className="hero">
-        <span className="eyebrow">
-          <ShieldIcon size={14} /> Zero-knowledge payroll on Stellar
-        </span>
-        <h2>
-          Stream salaries that vest by the second,{" "}
-          <span className="grad">verified privately</span> on-chain.
-        </h2>
-        <p className="lede">
-          StreamZero escrows USDC under a cryptographic commitment. Employees withdraw vested pay by
-          submitting a zero-knowledge proof the vault checks on Stellar — so amounts, salary rates,
-          and identities stay off the public ledger entirely.
-        </p>
-        <div className="cta-row">
-          <Link href="/employer" className="btn">
-            <BuildingIcon size={16} /> I&apos;m an employer
-          </Link>
-          <Link href="/employee" className="btn secondary">
-            <UserIcon size={16} /> I have a payout link
-          </Link>
-        </div>
-        <div className="trust">
-          <span className="chip">
-            <EyeOffIcon size={15} /> Amounts stay off-ledger
-          </span>
-          <span className="chip">
-            <ShieldIcon size={15} /> Groth16 proof verified on-chain
-          </span>
-          <span className="chip">
-            <BoltIcon size={15} /> Vests every second
-          </span>
+        <div className="hero-layout">
+          <div className="hero-copy">
+            <span className="eyebrow">
+              <ShieldIcon size={14} /> Zero-knowledge payroll on Stellar
+            </span>
+            <h2>
+              Stream salaries that vest by the second,{" "}
+              <span className="grad">verified privately</span> on-chain.
+            </h2>
+            <p className="lede">
+              StreamZero escrows USDC under a cryptographic commitment. Employees withdraw vested pay
+              by submitting a zero-knowledge proof the vault checks on Stellar — so amounts, salary
+              rates, and identities stay off the public ledger entirely.
+            </p>
+            <div className="cta-row">
+              <Link href="/employer" className="btn">
+                <BuildingIcon size={16} /> I&apos;m an employer
+              </Link>
+              <Link href="/employee" className="btn secondary">
+                <UserIcon size={16} /> I have a payout link
+              </Link>
+            </div>
+            <div className="trust">
+              <span className="chip">
+                <EyeOffIcon size={15} /> Amounts stay off-ledger
+              </span>
+              <span className="chip">
+                <ShieldIcon size={15} /> Groth16 proof verified on-chain
+              </span>
+              <span className="chip">
+                <BoltIcon size={15} /> Vests every second
+              </span>
+            </div>
+          </div>
+
+          {/* A glance at what the employee actually sees — built from the same
+              vocabulary as the live dashboard, so the promise feels concrete. */}
+          <div className="hero-visual" aria-hidden="true">
+            <div className="preview-card">
+              <div className="preview-top">
+                <div className="preview-who">
+                  <span className="preview-avatar">AK</span>
+                  <div>
+                    <div className="nm">Engineering — Alice</div>
+                    <div className="sub">Stream #0c4f…91a2</div>
+                  </div>
+                </div>
+                <span className="preview-pill">
+                  <BoltIcon size={12} /> Live
+                </span>
+              </div>
+
+              <div className="preview-amount">
+                1,284.06<span className="ccy">USDC</span>
+              </div>
+              <div className="preview-cap">
+                <ClockIcon size={13} /> Claimable right now · vesting every second
+              </div>
+              <div className="preview-bar">
+                <span />
+              </div>
+
+              <div className="preview-rows">
+                <div className="pr">
+                  <span className="lbl">
+                    <ShieldIcon size={13} /> Proof
+                  </span>
+                  <span className="val">Groth16 · verified ✓</span>
+                </div>
+                <div className="pr">
+                  <span className="lbl">
+                    <EyeOffIcon size={13} /> Salary rate
+                  </span>
+                  <span className="val masked">•••••• /sec</span>
+                </div>
+                <div className="pr">
+                  <span className="lbl">
+                    <EyeOffIcon size={13} /> Total comp
+                  </span>
+                  <span className="val masked">•••••••</span>
+                </div>
+              </div>
+            </div>
+            <span className="proof-chip">
+              <CheckIcon size={13} /> Verified on Stellar
+            </span>
+          </div>
         </div>
       </section>
 
