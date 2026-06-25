@@ -24,6 +24,16 @@ interface Loaded {
   withdrawnBase: bigint;
 }
 
+// Shared atoms — Tailwind utilities composed into named pieces.
+const card = "surface animate-rise rounded-lg p-5 sm:p-[26px]";
+const cardIcon =
+  "grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-border bg-violet/[0.12] text-violet";
+const cardEyebrow = "mb-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-faint";
+const cardTitle = "m-0 font-display text-[19px] font-semibold tracking-[-0.01em]";
+const fieldLabel = "mb-[7px] mt-4 block text-[12.5px] font-medium text-muted";
+const cellKey = "text-[11.5px] font-semibold uppercase tracking-[0.02em] text-faint";
+const cellVal = "mt-[5px] font-mono text-[15px] font-medium tabular-nums";
+
 export default function EmployeeDashboard() {
   const { address, connect: onConnect } = useWallet();
   const [linkText, setLinkText] = useState("");
@@ -200,195 +210,212 @@ export default function EmployeeDashboard() {
   const claimableNow = claimableBase < 0n ? 0n : claimableBase;
 
   return (
-    <div className="dash">
-      <div className="dash-main">
-      <div className="card">
-        <div className="card-head">
-          <span className="card-icon">
-            <KeyIcon size={20} />
-          </span>
-          <div>
-            <div className="eyebrow-sm">Employee</div>
-            <h2>Access your stream</h2>
-          </div>
-        </div>
-        <p className="hint">
-          Paste the secret link your employer sent (or open it directly). Your secret never leaves
-          this browser.
-        </p>
-        <label>Secret link</label>
-        <textarea
-          value={linkText}
-          onChange={(e) => setLinkText(e.target.value)}
-          placeholder="https://…/?s=…"
-        />
-        <button className="btn full" onClick={() => load(linkText)} disabled={busy}>
-          <UserIcon size={16} /> Load stream
-        </button>
-        {err && !loaded && (
-          <div className="status err">
-            <AlertIcon size={16} /> {err}
-          </div>
-        )}
-      </div>
-      </div>
-
-      <div className="dash-aside">
-      {!loaded ? (
-        <div className="aside-empty">
-          <span className="orb">
-            <BoltIcon size={24} />
-          </span>
-          <h3>Your stream appears here</h3>
-          <p>
-            Load a secret link and you&apos;ll watch your balance vest live — then withdraw with a
-            proof built right here in your browser.
-          </p>
-          <ul className="mini-steps">
-            <li>
-              <span>1</span> Paste the link your employer sent you
-            </li>
-            <li>
-              <span>2</span> Watch it vest, second by second
-            </li>
-            <li>
-              <span>3</span> Prove &amp; withdraw — nothing else leaks
-            </li>
-          </ul>
-        </div>
-      ) : (
-        <div className="card">
-          <div className="card-head">
-            <span className="card-icon">
-              <BoltIcon size={20} />
+    <div className="grid grid-cols-1 items-start gap-[18px] min-[880px]:grid-cols-2">
+      <div>
+        <div className={card}>
+          <div className="mb-1.5 flex items-center gap-[13px]">
+            <span className={cardIcon}>
+              <KeyIcon size={20} />
             </span>
             <div>
-              <div className="eyebrow-sm">Live stream</div>
-              <h2>{loaded.secret.label || "Your stream"}</h2>
+              <div className={cardEyebrow}>Employee</div>
+              <h2 className={cardTitle}>Access your stream</h2>
             </div>
           </div>
-
-          <div className="hero-stat">
-            <span className="cap">
-              <span className="live-dot" /> Claimable right now
-            </span>
-            <div className="big">
-              {fromBaseUnits(claimableNow).toLocaleString(undefined, {
-                maximumFractionDigits: 7,
-              })}
-              <span className="unit">USDC available to withdraw</span>
-            </div>
-          </div>
-
-          <div className="progress">
-            <div className="track">
-              <div className="fill" style={{ width: `${vestedPct}%` }} />
-            </div>
-            <div className="legend">
-              <span>{vestedPct.toFixed(2)}% vested</span>
-              <span>
-                {fromBaseUnits(vested).toLocaleString()} /{" "}
-                {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
-              </span>
-            </div>
-          </div>
-
-          <div className="metric-grid">
-            <div className="cell">
-              <div className="k">Total vested</div>
-              <div className="v">{fromBaseUnits(vested).toLocaleString()} USDC</div>
-            </div>
-            <div className="cell">
-              <div className="k">Already withdrawn</div>
-              <div className="v">
-                {fromBaseUnits(loaded.withdrawnBase).toLocaleString()} USDC
-              </div>
-            </div>
-            <div className="cell">
-              <div className="k">Stream total</div>
-              <div className="v">
-                {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
-              </div>
-            </div>
-            <div className="cell">
-              <div className="k">Remaining</div>
-              <div className="v">
-                {fromBaseUnits(loaded.depositBase - vested).toLocaleString()} USDC
-              </div>
-            </div>
-          </div>
-
-          <label>Amount to withdraw (blank = all claimable)</label>
-          <input
-            type="number"
-            value={withdrawWhole}
-            placeholder={fromBaseUnits(claimableNow).toString()}
-            onChange={(e) =>
-              setWithdrawWhole(e.target.value === "" ? "" : Number(e.target.value))
-            }
+          <p className="mb-5 mt-1 text-[13.5px] leading-relaxed text-muted">
+            Paste the secret link your employer sent (or open it directly). Your secret never leaves
+            this browser.
+          </p>
+          <label className={fieldLabel}>Secret link</label>
+          <textarea
+            value={linkText}
+            onChange={(e) => setLinkText(e.target.value)}
+            placeholder="https://…/?s=…"
           />
-
-          <button className="btn full" onClick={withdraw} disabled={busy}>
-            {busy ? (
-              <>
-                <span className="spinner" /> Working…
-              </>
-            ) : address ? (
-              <>
-                <ShieldIcon size={16} /> Generate proof &amp; withdraw
-              </>
-            ) : (
-              "Connect wallet to withdraw"
-            )}
+          <button className="btn mt-[18px] w-full" onClick={() => load(linkText)} disabled={busy}>
+            <UserIcon size={16} /> Load stream
           </button>
-
-          {steps.length > 0 && (
-            <div className="steps">
-              {steps.map((s, i) => {
-                const text = s.replace(/^✓ /, "");
-                const isDone = s.startsWith("✓");
-                const isActive = !isDone && busy && i === steps.length - 1;
-                return (
-                  <div
-                    key={i}
-                    className={`step ${isDone ? "done" : ""} ${isActive ? "active" : ""}`}
-                  >
-                    <span className="ico">
-                      {isDone ? (
-                        <CheckIcon size={16} />
-                      ) : isActive ? (
-                        <span className="spinner" />
-                      ) : (
-                        <span style={{ opacity: 0.4 }}>○</span>
-                      )}
-                    </span>
-                    {text}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {done && (
-            <div className="status ok">
-              <CheckIcon size={16} /> {done}
-            </div>
-          )}
-          {err && (
-            <div className="status err">
+          {err && !loaded && (
+            <div className="mt-4 flex items-start gap-[9px] rounded-sm border border-danger/40 bg-danger/[0.07] px-3.5 py-3 text-[13px] leading-[1.5] text-danger [&>svg]:mt-px [&>svg]:shrink-0">
               <AlertIcon size={16} /> {err}
             </div>
           )}
-
-          <div className="observer">
-            <EyeOffIcon size={16} />
-            <span>
-              The proof reveals nothing but its own validity. The ledger records that a valid
-              withdrawal occurred — not your rate, your total, or that this payment is linked to the
-              employer&apos;s stream.
-            </span>
-          </div>
         </div>
-      )}
+      </div>
+
+      <div className="min-[880px]:sticky min-[880px]:top-[84px]">
+        {!loaded ? (
+          <div className="relative rounded-lg border border-dashed border-border-strong bg-[rgba(8,5,18,0.25)] px-[26px] py-[34px] text-center">
+            <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-border bg-violet/10 text-violet">
+              <BoltIcon size={24} />
+            </span>
+            <h3 className="mb-2 mt-0 font-display text-base tracking-[-0.01em]">
+              Your stream appears here
+            </h3>
+            <p className="m-0 mx-auto max-w-[34ch] text-[13px] leading-relaxed text-muted">
+              Load a secret link and you&apos;ll watch your balance vest live — then withdraw with a
+              proof built right here in your browser.
+            </p>
+            <ul className="mx-auto mt-5 max-w-[30ch] list-none p-0 text-left">
+              {[
+                "Paste the link your employer sent you",
+                "Watch it vest, second by second",
+                "Prove & withdraw — nothing else leaks",
+              ].map((t, i) => (
+                <li
+                  key={t}
+                  className="flex items-center gap-[11px] border-t border-border py-[9px] text-[12.5px] text-muted"
+                >
+                  <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-[7px] border border-border bg-violet/[0.12] text-[11px] font-bold text-violet">
+                    {i + 1}
+                  </span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className={card}>
+            <div className="mb-1.5 flex items-center gap-[13px]">
+              <span className={cardIcon}>
+                <BoltIcon size={20} />
+              </span>
+              <div>
+                <div className={cardEyebrow}>Live stream</div>
+                <h2 className={cardTitle}>{loaded.secret.label || "Your stream"}</h2>
+              </div>
+            </div>
+
+            <div className="mb-[18px] mt-1.5">
+              <span className="mb-2 inline-flex items-center gap-2 text-xs text-muted">
+                <span className="live-dot" /> Claimable right now
+              </span>
+              <div className="font-display text-[clamp(40px,9vw,56px)] font-bold leading-none tracking-[-0.03em] tabular-nums text-grad">
+                {fromBaseUnits(claimableNow).toLocaleString(undefined, {
+                  maximumFractionDigits: 7,
+                })}
+                <span className="mt-2.5 block font-sans text-[13px] font-medium tracking-normal text-muted [-webkit-text-fill-color:var(--muted)]">
+                  USDC available to withdraw
+                </span>
+              </div>
+            </div>
+
+            <div className="mb-0.5 mt-[18px]">
+              <div className="h-[9px] overflow-hidden rounded-full border border-border bg-[rgba(8,5,18,0.6)]">
+                <div
+                  className="shimmer-fill h-full rounded-full transition-[width] duration-500"
+                  style={{ width: `${vestedPct}%` }}
+                />
+              </div>
+              <div className="mt-2 flex justify-between text-[11.5px] tabular-nums text-faint">
+                <span>{vestedPct.toFixed(2)}% vested</span>
+                <span>
+                  {fromBaseUnits(vested).toLocaleString()} /{" "}
+                  {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
+                </span>
+              </div>
+            </div>
+
+            <div className="my-[18px] mb-1 grid grid-cols-2 gap-px overflow-hidden rounded-[14px] border border-border bg-border">
+              <div className="bg-[rgba(8,5,18,0.35)] px-4 py-3.5">
+                <div className={cellKey}>Total vested</div>
+                <div className={cellVal}>{fromBaseUnits(vested).toLocaleString()} USDC</div>
+              </div>
+              <div className="bg-[rgba(8,5,18,0.35)] px-4 py-3.5">
+                <div className={cellKey}>Already withdrawn</div>
+                <div className={cellVal}>
+                  {fromBaseUnits(loaded.withdrawnBase).toLocaleString()} USDC
+                </div>
+              </div>
+              <div className="bg-[rgba(8,5,18,0.35)] px-4 py-3.5">
+                <div className={cellKey}>Stream total</div>
+                <div className={cellVal}>
+                  {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
+                </div>
+              </div>
+              <div className="bg-[rgba(8,5,18,0.35)] px-4 py-3.5">
+                <div className={cellKey}>Remaining</div>
+                <div className={cellVal}>
+                  {fromBaseUnits(loaded.depositBase - vested).toLocaleString()} USDC
+                </div>
+              </div>
+            </div>
+
+            <label className={fieldLabel}>Amount to withdraw (blank = all claimable)</label>
+            <input
+              type="number"
+              value={withdrawWhole}
+              placeholder={fromBaseUnits(claimableNow).toString()}
+              onChange={(e) =>
+                setWithdrawWhole(e.target.value === "" ? "" : Number(e.target.value))
+              }
+            />
+
+            <button className="btn mt-[18px] w-full" onClick={withdraw} disabled={busy}>
+              {busy ? (
+                <>
+                  <span className="spinner" /> Working…
+                </>
+              ) : address ? (
+                <>
+                  <ShieldIcon size={16} /> Generate proof &amp; withdraw
+                </>
+              ) : (
+                "Connect wallet to withdraw"
+              )}
+            </button>
+
+            {steps.length > 0 && (
+              <div className="mt-4 overflow-hidden rounded-[14px] border border-border bg-[rgba(8,5,18,0.35)]">
+                {steps.map((s, i) => {
+                  const text = s.replace(/^✓ /, "");
+                  const isDone = s.startsWith("✓");
+                  const isActive = !isDone && busy && i === steps.length - 1;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-[11px] border-b border-border px-4 py-[13px] text-[13px] last:border-b-0 ${
+                        isDone ? "text-text" : isActive ? "bg-violet/[0.06] text-text" : "text-muted"
+                      }`}
+                    >
+                      <span
+                        className={`grid h-5 w-5 shrink-0 place-items-center ${isDone ? "text-ok" : ""}`}
+                      >
+                        {isDone ? (
+                          <CheckIcon size={16} />
+                        ) : isActive ? (
+                          <span className="spinner" />
+                        ) : (
+                          <span className="opacity-40">○</span>
+                        )}
+                      </span>
+                      {text}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {done && (
+              <div className="mt-4 flex items-start gap-[9px] rounded-sm border border-ok/40 bg-ok/[0.07] px-3.5 py-3 text-[13px] leading-[1.5] text-ok [&>svg]:mt-px [&>svg]:shrink-0">
+                <CheckIcon size={16} /> {done}
+              </div>
+            )}
+            {err && (
+              <div className="mt-4 flex items-start gap-[9px] rounded-sm border border-danger/40 bg-danger/[0.07] px-3.5 py-3 text-[13px] leading-[1.5] text-danger [&>svg]:mt-px [&>svg]:shrink-0">
+                <AlertIcon size={16} /> {err}
+              </div>
+            )}
+
+            <div className="mt-[18px] flex gap-[11px] rounded-[14px] border border-border bg-cyan/[0.04] px-4 py-3.5 text-[12.5px] leading-relaxed text-muted [&>svg]:mt-px [&>svg]:shrink-0 [&>svg]:text-cyan">
+              <EyeOffIcon size={16} />
+              <span>
+                The proof reveals nothing but its own validity. The ledger records that a valid
+                withdrawal occurred — not your rate, your total, or that this payment is linked to
+                the employer&apos;s stream.
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
