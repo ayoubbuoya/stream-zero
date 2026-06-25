@@ -10,7 +10,7 @@ export const server = new rpc.Server(RPC_URL);
  * exceeds the ledger timestamp at execution (the contract rejects future
  * timestamps). Ledger time ≈ real time, so a small buffer absorbs clock skew.
  */
-export function safeCurrentTime(bufferSecs = 60): bigint {
+export function safeCurrentTime(bufferSecs = 20): bigint {
   return BigInt(Math.floor(Date.now() / 1000) - bufferSecs);
 }
 
