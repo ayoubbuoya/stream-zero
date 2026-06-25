@@ -86,19 +86,12 @@ export default function EmployeeDashboard() {
     }
   }, []);
 
-  // "Total vested" tracks real wall-clock time — intentionally runs slightly
-  // ahead of what's claimable (used for the progress bar + metric).
+  // Every figure is measured at the SAME timestamp the proof will use
+  // (wall-clock minus the proof buffer), so the numbers stay internally
+  // consistent for the viewer: Total vested − Already withdrawn = Claimable.
+  // The ticker still updates each second; it just trails real-time by the
+  // buffer, which is imperceptible but keeps "claimable" honest.
   const vested = loaded
-    ? vestedBase(
-        nowSecs(),
-        BigInt(loaded.secret.startTime),
-        BigInt(loaded.secret.salaryRateBase),
-        loaded.depositBase,
-      )
-    : 0n;
-  // "Claimable now" uses the same lagged timestamp the proof will use, so the
-  // number the user sees is exactly what they can actually withdraw.
-  const claimableVested = loaded
     ? vestedBase(
         nowSecs() - PROOF_TIME_BUFFER,
         BigInt(loaded.secret.startTime),
@@ -106,7 +99,7 @@ export default function EmployeeDashboard() {
         loaded.depositBase,
       )
     : 0n;
-  const claimableBase = loaded ? claimableVested - loaded.withdrawnBase : 0n;
+  const claimableBase = loaded ? vested - loaded.withdrawnBase : 0n;
   // `tick` is read so the ticker re-renders each second.
   void tick;
 
