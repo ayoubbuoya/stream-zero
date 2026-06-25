@@ -6,6 +6,15 @@ import { computeCommitment, randomSecretHex } from "@/lib/prover";
 import { encodeLink } from "@/lib/stream";
 import { fromBaseUnits, toBaseUnits } from "@/lib/config";
 import { nowSecs } from "@/lib/stellar";
+import {
+  BuildingIcon,
+  LockIcon,
+  CheckIcon,
+  CopyIcon,
+  EyeOffIcon,
+  AlertIcon,
+  WalletIcon,
+} from "@/components/icons";
 
 export default function EmployerDashboard({
   address,
@@ -21,6 +30,7 @@ export default function EmployerDashboard({
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const refreshBalance = useCallback(async () => {
     if (!address) return;
@@ -35,6 +45,10 @@ export default function EmployerDashboard({
   useEffect(() => {
     refreshBalance();
   }, [refreshBalance]);
+
+  // Live preview of the per-day / per-second drip the employee will see.
+  const perDay = days > 0 ? allocation / days : 0;
+  const perSec = days > 0 ? allocation / (days * 86400) : 0;
 
   async function faucet() {
     if (!address) return onConnect();
@@ -58,6 +72,7 @@ export default function EmployerDashboard({
     if (!address) return onConnect();
     setErr(null);
     setLink(null);
+    setCopied(false);
 
     const startTime = BigInt(nowSecs());
     const durationSecs = BigInt(Math.max(1, Math.round(days * 86400)));
@@ -97,26 +112,50 @@ export default function EmployerDashboard({
     }
   }
 
+  function copyLink() {
+    if (!link) return;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const fmt = (n: number) =>
+    n.toLocaleString(undefined, { maximumFractionDigits: n < 1 ? 6 : 2 });
+
   return (
     <>
       <div className="card">
-        <h2>Fund a private stream</h2>
+        <div className="card-head">
+          <span className="card-icon">
+            <BuildingIcon size={20} />
+          </span>
+          <div>
+            <div className="eyebrow-sm">Employer</div>
+            <h2>Fund a private stream</h2>
+          </div>
+        </div>
         <p className="hint">
-          Lock test USDC and post only a Poseidon commitment. The employee&apos;s
-          identity, salary rate, and total never appear on-chain.
+          Lock test USDC and post only a Poseidon commitment. The employee&apos;s identity, salary
+          rate, and total never appear on-chain.
         </p>
 
-        <div className="metric">
-          <span className="k">Your test USDC balance</span>
-          <span className="v">
+        <div className="stat">
+          <span className="label">Your test USDC balance</span>
+          <span className="value">
             {balance === null ? "—" : fromBaseUnits(balance).toLocaleString()} USDC
           </span>
         </div>
-        <button className="btn secondary" onClick={faucet} disabled={!!busy}>
-          {address ? "Get 10,000 test USDC" : "Connect wallet"}
+        <button className="btn secondary full" onClick={faucet} disabled={!!busy}>
+          {address ? (
+            <>
+              <WalletIcon size={16} /> Get 10,000 test USDC
+            </>
+          ) : (
+            "Connect wallet"
+          )}
         </button>
 
-        <label>Employee label (private, stays in your browser)</label>
+        <label>Employee label (private — stays in your browser)</label>
         <input value={label} onChange={(e) => setLabel(e.target.value)} />
 
         <div className="row">
@@ -138,32 +177,74 @@ export default function EmployerDashboard({
           </div>
         </div>
 
+        {allocation > 0 && days > 0 && (
+          <div className="metric-grid">
+            <div className="cell">
+              <div className="k">Vests per day</div>
+              <div className="v">{fmt(perDay)} USDC</div>
+            </div>
+            <div className="cell">
+              <div className="k">Vests per second</div>
+              <div className="v">{fmt(perSec)} USDC</div>
+            </div>
+          </div>
+        )}
+
         <button className="btn full" onClick={createStream} disabled={!!busy}>
-          {busy ?? (address ? "Create stream" : "Connect wallet to create")}
+          {busy ? (
+            <>
+              <span className="spinner" /> {busy}
+            </>
+          ) : address ? (
+            <>
+              <LockIcon size={16} /> Create stream &amp; lock funds
+            </>
+          ) : (
+            "Connect wallet to create"
+          )}
         </button>
 
-        {err && <div className="status err">{err}</div>}
+        {err && (
+          <div className="status err">
+            <AlertIcon size={16} /> {err}
+          </div>
+        )}
       </div>
 
       {link && (
         <div className="card">
-          <h2>✅ Stream funded</h2>
+          <div className="card-head">
+            <span className="card-icon" style={{ color: "var(--ok)" }}>
+              <CheckIcon size={20} />
+            </span>
+            <div>
+              <div className="eyebrow-sm">Funded</div>
+              <h2>Stream is live</h2>
+            </div>
+          </div>
           <p className="hint">
-            Send this secret link to the employee over a private channel. It holds
-            their secret — anyone with it can claim the vested funds.
+            Send this secret link to the employee over a private channel. It holds their secret —
+            anyone with it can claim the vested funds.
           </p>
           <div className="mono">{link}</div>
-          <button
-            className="btn secondary"
-            onClick={() => navigator.clipboard.writeText(link)}
-          >
-            Copy link
+          <button className="btn secondary full" onClick={copyLink}>
+            {copied ? (
+              <>
+                <CheckIcon size={16} /> Copied to clipboard
+              </>
+            ) : (
+              <>
+                <CopyIcon size={16} /> Copy secret link
+              </>
+            )}
           </button>
-          <p className="observer">
-            On the public ledger an observer sees only that funds were locked
-            under an opaque commitment — not who is being paid, the rate, or the
-            total.
-          </p>
+          <div className="observer">
+            <EyeOffIcon size={16} />
+            <span>
+              On the public ledger an observer sees only that funds were locked under an opaque
+              commitment — not who is being paid, the rate, or the total.
+            </span>
+          </div>
         </div>
       )}
     </>

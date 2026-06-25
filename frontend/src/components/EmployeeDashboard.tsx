@@ -6,6 +6,15 @@ import { computeCommitment, generateProof } from "@/lib/prover";
 import { decodeLink, StreamSecret, vestedBase } from "@/lib/stream";
 import { fromBaseUnits, toBaseUnits } from "@/lib/config";
 import { nowSecs, safeCurrentTime } from "@/lib/stellar";
+import {
+  UserIcon,
+  KeyIcon,
+  ShieldIcon,
+  CheckIcon,
+  AlertIcon,
+  EyeOffIcon,
+  BoltIcon,
+} from "@/components/icons";
 
 interface Loaded {
   secret: StreamSecret;
@@ -83,6 +92,12 @@ export default function EmployeeDashboard({
   // `tick` is read so the ticker re-renders each second.
   void tick;
 
+  // Vesting progress (0–100) of the whole deposit.
+  const vestedPct =
+    loaded && loaded.depositBase > 0n
+      ? Math.min(100, Number((vested * 10000n) / loaded.depositBase) / 100)
+      : 0;
+
   async function withdraw() {
     if (!address) return onConnect();
     if (!loaded) return;
@@ -153,13 +168,23 @@ export default function EmployeeDashboard({
     }
   }
 
+  const claimableNow = claimableBase < 0n ? 0n : claimableBase;
+
   return (
     <>
       <div className="card">
-        <h2>Access your stream</h2>
+        <div className="card-head">
+          <span className="card-icon">
+            <KeyIcon size={20} />
+          </span>
+          <div>
+            <div className="eyebrow-sm">Employee</div>
+            <h2>Access your stream</h2>
+          </div>
+        </div>
         <p className="hint">
-          Paste the secret link your employer sent (or open it directly). Your
-          secret never leaves this browser.
+          Paste the secret link your employer sent (or open it directly). Your secret never leaves
+          this browser.
         </p>
         <label>Secret link</label>
         <textarea
@@ -167,74 +192,147 @@ export default function EmployeeDashboard({
           onChange={(e) => setLinkText(e.target.value)}
           placeholder="https://…/?s=…"
         />
-        <button className="btn secondary" onClick={() => load(linkText)} disabled={busy}>
-          Load stream
+        <button className="btn full" onClick={() => load(linkText)} disabled={busy}>
+          <UserIcon size={16} /> Load stream
         </button>
-        {err && <div className="status err">{err}</div>}
+        {err && !loaded && (
+          <div className="status err">
+            <AlertIcon size={16} /> {err}
+          </div>
+        )}
       </div>
 
       {loaded && (
         <div className="card">
-          <h2>{loaded.secret.label || "Your stream"}</h2>
-          <div className="big">
-            {fromBaseUnits(claimableBase < 0n ? 0n : claimableBase).toLocaleString(
-              undefined,
-              { maximumFractionDigits: 7 },
-            )}
-            <span className="unit">USDC claimable now</span>
-          </div>
-          <div className="metric">
-            <span className="k">Total vested</span>
-            <span className="v">{fromBaseUnits(vested).toLocaleString()} USDC</span>
-          </div>
-          <div className="metric">
-            <span className="k">Already withdrawn</span>
-            <span className="v">
-              {fromBaseUnits(loaded.withdrawnBase).toLocaleString()} USDC
+          <div className="card-head">
+            <span className="card-icon">
+              <BoltIcon size={20} />
             </span>
+            <div>
+              <div className="eyebrow-sm">Live stream</div>
+              <h2>{loaded.secret.label || "Your stream"}</h2>
+            </div>
           </div>
-          <div className="metric">
-            <span className="k">Stream total (deposit)</span>
-            <span className="v">
-              {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
+
+          <div className="hero-stat">
+            <span className="cap">
+              <span className="live-dot" /> Claimable right now
             </span>
+            <div className="big">
+              {fromBaseUnits(claimableNow).toLocaleString(undefined, {
+                maximumFractionDigits: 7,
+              })}
+              <span className="unit">USDC available to withdraw</span>
+            </div>
+          </div>
+
+          <div className="progress">
+            <div className="track">
+              <div className="fill" style={{ width: `${vestedPct}%` }} />
+            </div>
+            <div className="legend">
+              <span>{vestedPct.toFixed(2)}% vested</span>
+              <span>
+                {fromBaseUnits(vested).toLocaleString()} /{" "}
+                {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
+              </span>
+            </div>
+          </div>
+
+          <div className="metric-grid">
+            <div className="cell">
+              <div className="k">Total vested</div>
+              <div className="v">{fromBaseUnits(vested).toLocaleString()} USDC</div>
+            </div>
+            <div className="cell">
+              <div className="k">Already withdrawn</div>
+              <div className="v">
+                {fromBaseUnits(loaded.withdrawnBase).toLocaleString()} USDC
+              </div>
+            </div>
+            <div className="cell">
+              <div className="k">Stream total</div>
+              <div className="v">
+                {fromBaseUnits(loaded.depositBase).toLocaleString()} USDC
+              </div>
+            </div>
+            <div className="cell">
+              <div className="k">Remaining</div>
+              <div className="v">
+                {fromBaseUnits(loaded.depositBase - vested).toLocaleString()} USDC
+              </div>
+            </div>
           </div>
 
           <label>Amount to withdraw (blank = all claimable)</label>
           <input
             type="number"
             value={withdrawWhole}
-            placeholder={fromBaseUnits(claimableBase < 0n ? 0n : claimableBase).toString()}
+            placeholder={fromBaseUnits(claimableNow).toString()}
             onChange={(e) =>
               setWithdrawWhole(e.target.value === "" ? "" : Number(e.target.value))
             }
           />
 
           <button className="btn full" onClick={withdraw} disabled={busy}>
-            {busy
-              ? "Working…"
-              : address
-                ? "Generate proof & withdraw"
-                : "Connect wallet to withdraw"}
+            {busy ? (
+              <>
+                <span className="spinner" /> Working…
+              </>
+            ) : address ? (
+              <>
+                <ShieldIcon size={16} /> Generate proof &amp; withdraw
+              </>
+            ) : (
+              "Connect wallet to withdraw"
+            )}
           </button>
 
           {steps.length > 0 && (
             <div className="steps">
-              {steps.map((s, i) => (
-                <div key={i} className={s.startsWith("✓") ? "done" : ""}>
-                  {s}
-                </div>
-              ))}
+              {steps.map((s, i) => {
+                const text = s.replace(/^✓ /, "");
+                const isDone = s.startsWith("✓");
+                const isActive = !isDone && busy && i === steps.length - 1;
+                return (
+                  <div
+                    key={i}
+                    className={`step ${isDone ? "done" : ""} ${isActive ? "active" : ""}`}
+                  >
+                    <span className="ico">
+                      {isDone ? (
+                        <CheckIcon size={16} />
+                      ) : isActive ? (
+                        <span className="spinner" />
+                      ) : (
+                        <span style={{ opacity: 0.4 }}>○</span>
+                      )}
+                    </span>
+                    {text}
+                  </div>
+                );
+              })}
             </div>
           )}
-          {done && <div className="status ok">{done}</div>}
-          {err && <div className="status err">{err}</div>}
+          {done && (
+            <div className="status ok">
+              <CheckIcon size={16} /> {done}
+            </div>
+          )}
+          {err && (
+            <div className="status err">
+              <AlertIcon size={16} /> {err}
+            </div>
+          )}
 
-          <p className="observer">
-            The proof reveals nothing but its own validity. The ledger records that
-            a valid withdrawal occurred — not your rate, your total, or that this
-            payment is linked to the employer&apos;s stream.
-          </p>
+          <div className="observer">
+            <EyeOffIcon size={16} />
+            <span>
+              The proof reveals nothing but its own validity. The ledger records that a valid
+              withdrawal occurred — not your rate, your total, or that this payment is linked to the
+              employer&apos;s stream.
+            </span>
+          </div>
         </div>
       )}
     </>
