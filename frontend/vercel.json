@@ -1,0 +1,5 @@
+{
+  "framework": "nextjs",
+  "installCommand": "cd ../bindings/streamzero && npm install && npm run build && cd ../mock-stablecoin && npm install && npm run build && cd ../../frontend && npm install",
+  "buildCommand": "npm run build"
+}
