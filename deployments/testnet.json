@@ -1,0 +1,12 @@
+{
+  "network": "testnet",
+  "rpcUrl": "https://soroban-testnet.stellar.org",
+  "networkPassphrase": "Test SDF Network ; September 2015",
+  "protocolVersion": 27,
+  "contracts": {
+    "streamzeroVault": "CCEHDMIQKARR7S7LYELDXNTFMBFUY2JHC6R4DXUZW2LACPULS44OKQFF",
+    "mockStablecoin": "CCYX5NLUZ7ROI2KRAC4FNQR3JYCXX6YXU2ZL3STKJO5C4ZZ2WCDLMYYW"
+  },
+  "deployer": "GDDRVR2JGZ6NHGLSR5SD5XGXMBBDVZOEGZJGNMDSK2WKBSNJLEPVN7WS",
+  "verifyingKey": "proving/streamzero-prover/artifacts/verifying_key.json"
+}

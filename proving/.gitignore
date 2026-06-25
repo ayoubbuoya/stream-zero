@@ -3,3 +3,4 @@ node_modules/
 build/
 circom
 package-lock.json
+target
