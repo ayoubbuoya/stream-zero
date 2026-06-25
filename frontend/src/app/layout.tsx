@@ -47,7 +47,7 @@ export default function RootLayout({
           <div className="grid-veil" />
         </div>
         <WalletProvider>
-          <div className="wrap">
+          <div className="mx-auto max-w-[1180px] px-4 pb-24 sm:px-7">
             <SiteHeader />
             {children}
             <SiteFooter />
