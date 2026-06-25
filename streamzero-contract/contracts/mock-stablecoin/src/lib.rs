@@ -43,6 +43,8 @@ pub enum Error {
 }
 
 const DECIMALS: u32 = 7;
+/// Max a single faucet call can mint (1,000,000.0000000 with 7 decimals).
+const MAX_FAUCET: i128 = 1_000_000 * 10_000_000;
 
 #[contract]
 pub struct MockStablecoin;
@@ -64,6 +66,18 @@ impl MockStablecoin {
             .get(&DataKey::Admin)
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
+        let balance = read_balance(&env, &to);
+        write_balance(&env, &to, balance + amount);
+        Ok(())
+    }
+
+    /// Open testnet faucet: anyone can mint up to `MAX_FAUCET` to themselves.
+    /// Demo-only convenience so an employer can fund a stream without admin.
+    pub fn faucet(env: Env, to: Address, amount: i128) -> Result<(), Error> {
+        to.require_auth();
+        if amount <= 0 || amount > MAX_FAUCET {
+            return Err(Error::InvalidAmount);
+        }
         let balance = read_balance(&env, &to);
         write_balance(&env, &to, balance + amount);
         Ok(())

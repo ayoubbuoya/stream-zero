@@ -1,0 +1,31 @@
+[package]
+name = "streamzero-wasm"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Browser proving module. Wraps the streamzero-prover library with wasm-bindgen
+# and embeds the fixed proving key so the frontend can compute commitments and
+# generate proofs that match the deployed verifying key.
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+streamzero-prover = { path = "../streamzero-prover" }
+ark-bn254 = "0.5"
+wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+hex = "0.4"
+# ark pulls getrandom; the js feature is required to compile for wasm32.
+getrandom = { version = "0.2", features = ["js"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+
+# wasm-opt binary isn't available in this environment; the wasm is already
+# optimized by the release profile.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
