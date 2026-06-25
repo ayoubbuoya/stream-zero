@@ -5,7 +5,7 @@ import { hexToBuffer, vault } from "@/lib/contracts";
 import { computeCommitment, generateProof } from "@/lib/prover";
 import { decodeLink, StreamSecret, vestedBase } from "@/lib/stream";
 import { fromBaseUnits, toBaseUnits } from "@/lib/config";
-import { nowSecs, safeCurrentTime } from "@/lib/stellar";
+import { nowSecs, safeCurrentTime, PROOF_TIME_BUFFER } from "@/lib/stellar";
 import { useWallet } from "@/components/WalletProvider";
 import {
   UserIcon,
@@ -76,6 +76,8 @@ export default function EmployeeDashboard() {
     }
   }, []);
 
+  // "Total vested" tracks real wall-clock time — intentionally runs slightly
+  // ahead of what's claimable (used for the progress bar + metric).
   const vested = loaded
     ? vestedBase(
         nowSecs(),
@@ -84,7 +86,17 @@ export default function EmployeeDashboard() {
         loaded.depositBase,
       )
     : 0n;
-  const claimableBase = loaded ? vested - loaded.withdrawnBase : 0n;
+  // "Claimable now" uses the same lagged timestamp the proof will use, so the
+  // number the user sees is exactly what they can actually withdraw.
+  const claimableVested = loaded
+    ? vestedBase(
+        nowSecs() - PROOF_TIME_BUFFER,
+        BigInt(loaded.secret.startTime),
+        BigInt(loaded.secret.salaryRateBase),
+        loaded.depositBase,
+      )
+    : 0n;
+  const claimableBase = loaded ? claimableVested - loaded.withdrawnBase : 0n;
   // `tick` is read so the ticker re-renders each second.
   void tick;
 
@@ -115,13 +127,34 @@ export default function EmployeeDashboard() {
         loaded.depositBase,
       );
       const maxBase = vestedAtProof - loaded.withdrawnBase;
-      let amountBase =
-        withdrawWhole === "" ? maxBase : toBaseUnits(Number(withdrawWhole));
-      if (amountBase > maxBase) amountBase = maxBase;
-      if (amountBase <= 0n) {
+      if (maxBase <= 0n) {
         setErr("Nothing vested to withdraw yet.");
         setBusy(false);
         return;
+      }
+
+      let amountBase: bigint;
+      if (withdrawWhole === "") {
+        // Blank = withdraw everything currently claimable.
+        amountBase = maxBase;
+      } else {
+        amountBase = toBaseUnits(Number(withdrawWhole));
+        if (amountBase <= 0n) {
+          setErr("Enter an amount greater than zero.");
+          setBusy(false);
+          return;
+        }
+        // Don't silently send less than the user asked for — tell them.
+        if (amountBase > maxBase) {
+          const maxWhole = fromBaseUnits(maxBase).toLocaleString(undefined, {
+            maximumFractionDigits: 7,
+          });
+          setErr(
+            `Only ${maxWhole} USDC is provably claimable right now. Lower the amount, or wait a few seconds for more to vest.`,
+          );
+          setBusy(false);
+          return;
+        }
       }
 
       setSteps(["Generating zero-knowledge proof in your browser…"]);
