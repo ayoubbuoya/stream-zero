@@ -340,7 +340,7 @@ export default function Home() {
       </section>
 
       {/* ---------- Final CTA ---------- */}
-      <section className="mt-[60px] rounded-xl border border-border-strong p-[44px_28px] text-center shadow-panel backdrop-blur-[16px] [background:radial-gradient(600px_200px_at_50%_0%,rgba(160,107,255,0.18),transparent_70%),var(--grad-panel)]">
+      <section className="mt-[60px] rounded-xl border border-border-strong p-[44px_28px] text-center shadow-panel backdrop-blur-[16px] [background:radial-gradient(600px_200px_at_50%_0%,rgba(182,255,92,0.16),transparent_70%),var(--grad-panel)]">
         <h3 className="m-0 font-display text-[clamp(24px,4vw,34px)] tracking-[-0.02em]">
           Pay privately. Prove publicly.
         </h3>
