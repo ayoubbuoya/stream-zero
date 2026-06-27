@@ -8,6 +8,10 @@
 
 `Soroban` · `Protocol 25/26 BN254 host functions` · `Groth16` · `Noir` · `Next.js` · **Live on Testnet**
 
+### → [**Try the live dApp**](https://stream-zero-psi.vercel.app/) ·  [**Vault on stellar.expert**](https://stellar.expert/explorer/testnet/contract/CCEHDMIQKARR7S7LYELDXNTFMBFUY2JHC6R4DXUZW2LACPULS44OKQFF)
+
+*No install needed — connect Freighter (Testnet), create a stream, and watch a Groth16 proof get generated in your browser and verified on-chain.*
+
 </div>
 
 ---
@@ -30,6 +34,8 @@ This is not a mock. A **genuine Groth16 proof is verified on-chain** by Stellar�
 | **Mock USDC** (SEP-41 token) | [`CCYX5NLU…LMYYW`](https://stellar.expert/explorer/testnet/contract/CCYX5NLUZ7ROI2KRAC4FNQR3JYCXX6YXU2ZL3STKJO5C4ZZ2WCDLMYYW) |
 
 The vault’s **`Claimed` events** on the explorer are real ZK-verified withdrawals. The ZK is load-bearing: remove it and the contract cannot release a single token.
+
+> **See it yourself:** the [live dApp](https://stream-zero-psi.vercel.app/) runs the full flow against these exact contracts — proof generation happens in *your* browser; the only thing that touches the chain is a deposit, a proof, and a transfer.
 
 ---
 
@@ -61,6 +67,8 @@ The vault’s **`Claimed` events** on the explorer are real ZK-verified withdraw
 | that *a* valid proof was submitted | salary rate |
 | the withdrawal amount + that funds moved | total allocation / duration |
 
+> **What we deliberately *don’t* claim.** The withdraw *amount* is a public input, so an observer who watches many claims can infer a rate from their size and cadence — full amount-privacy (fixed-denomination or shielded-balance claims) is the natural next step, not something we hand-wave as already solved. And the commitment preimage is shared with the employee over a secret link; that link is the trust boundary, exactly as a private key would be. We call these out because a privacy protocol that doesn’t state its leakage isn’t a privacy protocol.
+
 ### The cryptography (genuinely doing work)
 
 - **Commitment:** `Poseidon(secret, salary_rate, start_time)` — binds the salary terms without revealing them.
@@ -81,6 +89,26 @@ The vault’s **`Claimed` events** on the explorer are real ZK-verified withdraw
 
 ---
 
+## The numbers (a ZK hackathon is about cost)
+
+Measured on this repo — proving via the in-browser WASM module, verification cost from the Soroban budget meter on the real-proof e2e test (`cargo test`, host `cost_estimate().budget()`).
+
+| Metric | Value |
+|---|---|
+| **On-chain `claim` cost** | **29.1M CPU instructions** — ~29% of the 100M per-ledger limit, leaving headroom |
+| On-chain memory | 0.40 MB / 41.9 MB limit |
+| — of which BN254 pairing | 17.5M insns (the verification equation) |
+| — G2 subgroup check | 6.8M · G1 MSM 3.1M · G1 mul 1.15M |
+| **Proof size** | **256 bytes** (G1 `A` 64B + G2 `B` 128B + G1 `C` 64B) — constant, regardless of vesting math |
+| Public inputs | 6 |
+| **In-browser proof generation** | **~1.2 s** (warm WASM; arkworks Groth16 over BN254) |
+| Browser prover download | 1.6 MB Wasm (proving key embedded) |
+| On-chain verifier size | ~10 KB Wasm |
+
+The takeaway: a full private withdrawal — pairing check, nullifier, time and recipient binding, token transfer — fits in roughly a quarter of a single ledger's compute budget, with a constant 256-byte proof. This is exactly the regime Protocol 25's native BN254 made viable; a Wasm-only pairing implementation would not fit.
+
+---
+
 ## Repository layout
 
 | Path | What it is |
@@ -97,6 +125,8 @@ The vault’s **`Claimed` events** on the explorer are real ZK-verified withdraw
 ---
 
 ## Quickstart
+
+> **Don’t want to build anything?** The protocol is already live: open **[stream-zero-psi.vercel.app](https://stream-zero-psi.vercel.app/)** with [Freighter](https://freighter.app) on Testnet and run the full deposit → prove → claim flow against the deployed contracts. The steps below are only for rebuilding the artifacts from source.
 
 **Prerequisites:** Rust + `wasm32` targets, [`stellar-cli`](https://developers.stellar.org/docs/tools/cli), Node 18+, `nargo`, and the [Freighter](https://freighter.app) wallet (set to **Testnet**).
 
@@ -139,14 +169,23 @@ cd frontend && npm install && npm run dev   # http://localhost:3000
 - **Time binding:** the contract rejects any proof whose `current_time` exceeds the ledger clock, so funds can’t vest early.
 - **Front-running:** the payout address is bound into the proof; it can’t be swapped after generation.
 - **Deposit cap:** an independent on-chain backstop — cumulative withdrawals never exceed the deposit.
-- **Honest caveats:** the Groth16 trusted setup here is a single-contributor demo setup (a real deployment needs a proper ceremony); the “USDC” is a mock SEP-41 token on testnet (swap in the real USDC SAC for production — no vault changes needed).
+
+### The trusted setup — and why it’s the one thing we’d change first
+
+Groth16 needs a **trusted setup**: a one-time ceremony that produces the proving/verifying keys from secret randomness that must then be destroyed (the "toxic waste"). Anyone who knows that randomness can forge a valid proof for *any* statement — i.e. drain a vault.
+
+**For this demo, the setup is deterministic** ([`SETUP_SEED`](proving/streamzero-prover/src/lib.rs)) so the verifying key is reproducible from source and you can rebuild the exact keys the live contract uses. That is a **demo convenience, not a security property** — the seed is in the repo, so the toxic waste is *not* secret. We are stating this plainly rather than dressing it up: a privacy/soundness protocol that hides its own trust assumption doesn’t deserve to be trusted.
+
+**Path to production** is well-trodden and changes *no application code*: run a **Powers-of-Tau MPC ceremony** (e.g. `snarkjs` phase-1 + a circuit-specific phase-2) with N independent contributors — soundness holds as long as **one** participant destroys their share. Swap the resulting `verifying_key.json` into the vault constructor and redeploy; the prover, the WASM, and the contract verifier are unchanged. The hard parts (the circuit, the on-chain pairing check, the byte layout) are already done — only the *source of randomness* for the keys changes.
+
+- **Other honest caveats:** the “USDC” is a mock SEP-41 token on testnet (swap in the real USDC SAC for production — the vault uses only standard `transfer`/`balance`, so no contract change is needed).
 
 ---
 
 ## Tech stack
 
 **ZK:** Noir (spec) · Groth16 over BN254 · Poseidon · arkworks · `wasm-pack`
-**Chain:** Stellar Soroban · Protocol 25/26 BN254 + Poseidon host functions · `soroban-sdk` 26
+**Chain:** Stellar Soroban · BN254 + Poseidon host functions (introduced in Protocol 25/26; live testnet is Protocol 27) · `soroban-sdk` 26
 **App:** Next.js (App Router) · React · Stellar Wallets Kit (Freighter) · `@stellar/stellar-sdk`
 
 ---
